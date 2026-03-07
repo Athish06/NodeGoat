@@ -1,0 +1,102 @@
+rules:
+- id: fixora-wrapper-getbyuseridandthreshold
+  pattern-either:
+  - pattern: function getByUserIdAndThreshold(...) { ... }
+  - pattern: const getByUserIdAndThreshold = (...) => { ... }
+  - pattern: let getByUserIdAndThreshold = (...) => { ... }
+  - pattern: var getByUserIdAndThreshold = (...) => { ... }
+  - pattern: this.getByUserIdAndThreshold = (...) => { ... }
+  - pattern: this.getByUserIdAndThreshold = function(...) { ... }
+  - pattern: 'getByUserIdAndThreshold: (...) => { ... }'
+  - pattern: 'getByUserIdAndThreshold: function(...) { ... }'
+  - pattern: getByUserIdAndThreshold(...) { ... }
+  message: 'Vulnerable function ''getByUserIdAndThreshold()'' wraps allocationsCol.find.
+    Vulnerability: NoSQL Injection. User input is concatenated directly into the NoSQL
+    query without proper sanitization.'
+  severity: ERROR
+  languages:
+  - javascript
+  - typescript
+  metadata:
+    category: security
+    technology:
+    - javascript
+    - typescript
+    source: fixora-ai-analysis
+    vulnerability_type: NoSQL Injection
+    confidence: HIGH
+    wrapper_defined_in: app/data/allocations-dao.js
+    wraps:
+    - allocationsCol.find
+    modules_used:
+    - mongodb
+    cwe:
+    - CWE-943
+    owasp:
+    - A03:2021
+- id: fixora-wrapper-handlecontributionsupdate
+  pattern-either:
+  - pattern: function handleContributionsUpdate(...) { ... }
+  - pattern: const handleContributionsUpdate = (...) => { ... }
+  - pattern: let handleContributionsUpdate = (...) => { ... }
+  - pattern: var handleContributionsUpdate = (...) => { ... }
+  - pattern: this.handleContributionsUpdate = (...) => { ... }
+  - pattern: this.handleContributionsUpdate = function(...) { ... }
+  - pattern: 'handleContributionsUpdate: (...) => { ... }'
+  - pattern: 'handleContributionsUpdate: function(...) { ... }'
+  - pattern: handleContributionsUpdate(...) { ... }
+  message: 'Vulnerable function ''handleContributionsUpdate()'' wraps eval. Vulnerability:
+    SSJS Injection. User input is passed directly to the eval function, allowing arbitrary
+    JavaScript code execution.'
+  severity: ERROR
+  languages:
+  - javascript
+  - typescript
+  metadata:
+    category: security
+    technology:
+    - javascript
+    - typescript
+    source: fixora-ai-analysis
+    vulnerability_type: SSJS Injection
+    confidence: HIGH
+    wrapper_defined_in: app/routes/contributions.js
+    wraps:
+    - eval
+    modules_used:
+    - builtins
+- id: fixora-wrapper-displayresearch
+  pattern-either:
+  - pattern: function displayResearch(...) { ... }
+  - pattern: const displayResearch = (...) => { ... }
+  - pattern: let displayResearch = (...) => { ... }
+  - pattern: var displayResearch = (...) => { ... }
+  - pattern: this.displayResearch = (...) => { ... }
+  - pattern: this.displayResearch = function(...) { ... }
+  - pattern: 'displayResearch: (...) => { ... }'
+  - pattern: 'displayResearch: function(...) { ... }'
+  - pattern: displayResearch(...) { ... }
+  message: 'Vulnerable function ''displayResearch()'' wraps needle.get. Vulnerability:
+    SSRF. User input is used to construct the URL for the needle.get request without
+    proper validation.'
+  severity: WARNING
+  languages:
+  - javascript
+  - typescript
+  metadata:
+    category: security
+    technology:
+    - javascript
+    - typescript
+    source: fixora-ai-analysis
+    vulnerability_type: SSRF
+    confidence: MEDIUM
+    wrapper_defined_in: app/routes/research.js
+    wraps:
+    - needle.get
+    modules_used:
+    - needle
+    cwe:
+    - CWE-918
+    owasp:
+    - A10:2021
