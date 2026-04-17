@@ -1,0 +1,356 @@
+rules:
+- id: fixora-wrapper-this-update
+  patterns:
+  - pattern-either:
+    - pattern: this.update = (...) => { ... }
+    - pattern: this.update = function(...) { ... }
+  - pattern-either:
+    - pattern: allocationsCol.update(...)
+    - pattern: $OBJ.update(...)
+    - pattern: update(...)
+  message: '### Insecure Deserialization via `userId`
+
+
+    **Vulnerable Sink:** Passes untrusted data directly to `allocationsCol.update`.
+
+
+    **Live Exploit Vector:**
+
+    ```javascript\n// Target Function: this.update()\n// Parameter: userId\n\n// Attacker
+    executes:\nthis.update(userId = {"userId": "123"})\n```
+
+
+    **Outcome:**
+
+    An attacker could manipulate the userId to update arbitrary documents in the database.
+
+
+    **Data at Risk (Impact):**
+
+    An attacker could potentially update sensitive data in the database, leading to
+    data tampering or unauthorized access.'
+  severity: WARNING
+  languages:
+  - javascript
+  - typescript
+  metadata:
+    category: security
+    technology:
+    - javascript
+    - typescript
+    source: fixora-ai-analysis
+    vulnerability_type: Insecure Deserialization
+    confidence: MEDIUM
+    wrapper_defined_in: app/data/allocations-dao.js
+    wraps:
+    - allocationsCol.update
+    modules_used:
+    - mongodb
+    vulnerable_parameter: userId
+    malicious_payload: '{"userId": "123"}'
+    exploit_explanation: An attacker could manipulate the userId to update arbitrary
+      documents in the database.
+    exploit_injected_example: 'this.update(userId = {"userId": "123"})'
+    impact_summary: An attacker could potentially update sensitive data in the database,
+      leading to data tampering or unauthorized access.
+- id: fixora-wrapper-this-handlecontributionsupdate
+  patterns:
+  - pattern-either:
+    - pattern: this.handleContributionsUpdate = (...) => { ... }
+    - pattern: this.handleContributionsUpdate = function(...) { ... }
+  - pattern-either:
+    - pattern: eval(...)
+    - pattern: $OBJ.eval(...)
+  message: '### Command Injection via `req.body.preTax`
+
+
+    **Vulnerable Sink:** Passes untrusted data directly to `eval`.
+
+
+    **Live Exploit Vector:**
+
+    ```javascript\n// Target Function: this.handleContributionsUpdate()\n// Parameter:
+    req.body.preTax\n\n// Attacker executes:\nthis.handleContributionsUpdate(req.body.preTax
+    = 1 + require(''child_process'').exec(''ls''))\n```
+
+
+    **Outcome:**
+
+    An attacker could inject malicious code, potentially leading to arbitrary command
+    execution.
+
+
+    **Data at Risk (Impact):**
+
+    An attacker could execute arbitrary system commands, leading to a complete compromise
+    of the system.'
+  severity: ERROR
+  languages:
+  - javascript
+  - typescript
+  metadata:
+    category: security
+    technology:
+    - javascript
+    - typescript
+    source: fixora-ai-analysis
+    vulnerability_type: Command Injection
+    confidence: HIGH
+    wrapper_defined_in: app/routes/contributions.js
+    wraps:
+    - eval
+    modules_used:
+    - builtins
+    vulnerable_parameter: req.body.preTax
+    malicious_payload: 1 + require('child_process').exec('ls')
+    exploit_explanation: An attacker could inject malicious code, potentially leading
+      to arbitrary command execution.
+    exploit_injected_example: this.handleContributionsUpdate(req.body.preTax = 1 +
+      require('child_process').exec('ls'))
+    impact_summary: An attacker could execute arbitrary system commands, leading to
+      a complete compromise of the system.
+    cwe:
+    - CWE-78
+    owasp:
+    - A03:2021
+- id: fixora-wrapper-this-displayresearch
+  patterns:
+  - pattern-either:
+    - pattern: this.displayResearch = (...) => { ... }
+    - pattern: this.displayResearch = function(...) { ... }
+  - pattern-either:
+    - pattern: needle.get(...)
+    - pattern: $OBJ.get(...)
+    - pattern: get(...)
+  message: '### SSRF via `req.query.symbol`
+
+
+    **Vulnerable Sink:** Passes untrusted data directly to `needle.get`.
+
+
+    **Live Exploit Vector:**
+
+    ```javascript\n// Target Function: this.displayResearch()\n// Parameter: req.query.symbol\n\n//
+    Attacker executes:\nthis.displayResearch(req.query.symbol = {"symbol": "http://localhost:8080"})\n```
+
+
+    **Outcome:**
+
+    An attacker could manipulate the symbol parameter to make requests to internal
+    services or bypass firewall rules.
+
+
+    **Data at Risk (Impact):**
+
+    An attacker could potentially access internal services or bypass security controls,
+    leading to unauthorized access or data exfiltration.'
+  severity: WARNING
+  languages:
+  - javascript
+  - typescript
+  metadata:
+    category: security
+    technology:
+    - javascript
+    - typescript
+    source: fixora-ai-analysis
+    vulnerability_type: SSRF
+    confidence: MEDIUM
+    wrapper_defined_in: app/routes/research.js
+    wraps:
+    - needle.get
+    modules_used:
+    - needle
+    vulnerable_parameter: req.query.symbol
+    malicious_payload: '{"symbol": "http://localhost:8080"}'
+    exploit_explanation: An attacker could manipulate the symbol parameter to make
+      requests to internal services or bypass firewall rules.
+    exploit_injected_example: 'this.displayResearch(req.query.symbol = {"symbol":
+      "http://localhost:8080"})'
+    impact_summary: An attacker could potentially access internal services or bypass
+      security controls, leading to unauthorized access or data exfiltration.
+    cwe:
+    - CWE-918
+    owasp:
+    - A10:2021
+- id: fixora-wrapper-this-updateuser
+  patterns:
+  - pattern-either:
+    - pattern: this.updateUser = (...) => { ... }
+    - pattern: this.updateUser = function(...) { ... }
+  - pattern-either:
+    - pattern: users.update(...)
+    - pattern: $OBJ.update(...)
+    - pattern: update(...)
+  message: '### Mass Assignment via `userId`
+
+
+    **Vulnerable Sink:** Passes untrusted data directly to `users.update`.
+
+
+    **Live Exploit Vector:**
+
+    ```javascript\n// Target Function: this.updateUser()\n// Parameter: userId\n\n//
+    Attacker executes:\nthis.updateUser(userId = {"userId": "123", "isAdmin": true})\n```
+
+
+    **Outcome:**
+
+    An attacker could manipulate the userId to update arbitrary fields in the user
+    document.
+
+
+    **Data at Risk (Impact):**
+
+    An attacker could potentially update sensitive fields in the user document, leading
+    to unauthorized access or data tampering.'
+  severity: WARNING
+  languages:
+  - javascript
+  - typescript
+  metadata:
+    category: security
+    technology:
+    - javascript
+    - typescript
+    source: fixora-ai-analysis
+    vulnerability_type: Mass Assignment
+    confidence: MEDIUM
+    wrapper_defined_in: app/data/profile-dao.js
+    wraps:
+    - users.update
+    modules_used:
+    - mongodb
+    vulnerable_parameter: userId
+    malicious_payload: '{"userId": "123", "isAdmin": true}'
+    exploit_explanation: An attacker could manipulate the userId to update arbitrary
+      fields in the user document.
+    exploit_injected_example: 'this.updateUser(userId = {"userId": "123", "isAdmin":
+      true})'
+    impact_summary: An attacker could potentially update sensitive fields in the user
+      document, leading to unauthorized access or data tampering.
+    cwe:
+    - CWE-915
+    owasp:
+    - A03:2021
+- id: fixora-wrapper-this-validatelogin
+  patterns:
+  - pattern-either:
+    - pattern: this.validateLogin = (...) => { ... }
+    - pattern: this.validateLogin = function(...) { ... }
+  - pattern-either:
+    - pattern: usersCol.findOne(...)
+    - pattern: $OBJ.findOne(...)
+    - pattern: findOne(...)
+  message: '### Plaintext Password via `password`
+
+
+    **Vulnerable Sink:** Passes untrusted data directly to `usersCol.findOne`.
+
+
+    **Live Exploit Vector:**
+
+    ```javascript\n// Target Function: this.validateLogin()\n// Parameter: password\n\n//
+    Attacker executes:\nthis.validateLogin(password = password123)\n```
+
+
+    **Outcome:**
+
+    An attacker could obtain the plaintext password, potentially leading to unauthorized
+    access.
+
+
+    **Data at Risk (Impact):**
+
+    An attacker could obtain sensitive user credentials, leading to unauthorized access
+    or data breaches.'
+  severity: ERROR
+  languages:
+  - javascript
+  - typescript
+  metadata:
+    category: security
+    technology:
+    - javascript
+    - typescript
+    source: fixora-ai-analysis
+    vulnerability_type: Plaintext Password
+    confidence: HIGH
+    wrapper_defined_in: app/data/user-dao.js
+    wraps:
+    - usersCol.findOne
+    modules_used:
+    - mongodb
+    vulnerable_parameter: password
+    malicious_payload: password123
+    exploit_explanation: An attacker could obtain the plaintext password, potentially
+      leading to unauthorized access.
+    exploit_injected_example: this.validateLogin(password = password123)
+    impact_summary: An attacker could obtain sensitive user credentials, leading to
+      unauthorized access or data breaches.
+    cwe:
+    - CWE-256
+    - CWE-916
+    owasp:
+    - A02:2021
+- id: fixora-wrapper-callback-zaproxy-core-htmlreport
+  patterns:
+  - pattern-either:
+    - pattern: callback:zaproxy.core.htmlreport = (...) => { ... }
+    - pattern: callback:zaproxy.core.htmlreport = function(...) { ... }
+  - pattern-either:
+    - pattern: fs.writeFile(...)
+    - pattern: $OBJ.writeFile(...)
+    - pattern: writeFile(...)
+  message: '### Path Traversal via `__dirname`
+
+
+    **Vulnerable Sink:** Passes untrusted data directly to `fs.writeFile`.
+
+
+    **Live Exploit Vector:**
+
+    ```javascript\n// Target Function: callback:zaproxy.core.htmlreport()\n// Parameter:
+    __dirname\n\n// Attacker executes:\ncallback:zaproxy.core.htmlreport(__dirname
+    = ../../../../../etc/passwd)\n```
+
+
+    **Outcome:**
+
+    The attacker-controlled date can be manipulated to create a malicious reportPath,
+    potentially allowing an attacker to write to arbitrary locations on the file system.
+
+
+    **Data at Risk (Impact):**
+
+    Attackers can potentially overwrite system files or write to sensitive locations,
+    leading to data corruption or security breaches.'
+  severity: WARNING
+  languages:
+  - javascript
+  - typescript
+  metadata:
+    category: security
+    technology:
+    - javascript
+    - typescript
+    source: fixora-ai-analysis
+    vulnerability_type: Path Traversal
+    confidence: MEDIUM
+    wrapper_defined_in: test/security/profile-test.js
+    wraps:
+    - fs.writeFile
+    modules_used:
+    - fs
+    vulnerable_parameter: __dirname
+    malicious_payload: ../../../../../etc/passwd
+    exploit_explanation: The attacker-controlled date can be manipulated to create
+      a malicious reportPath, potentially allowing an attacker to write to arbitrary
+      locations on the file system.
+    exploit_injected_example: callback:zaproxy.core.htmlreport(__dirname = ../../../../../etc/passwd)
+    impact_summary: Attackers can potentially overwrite system files or write to sensitive
+      locations, leading to data corruption or security breaches.
+    cwe:
+    - CWE-22
+    owasp:
+    - A01:2021
