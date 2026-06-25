@@ -1,0 +1,116 @@
+rules:
+- id: fixora-wrapper-this-handlecontributionsupdate
+  patterns:
+  - pattern-either:
+    - pattern: this.handleContributionsUpdate = (...) => { ... }
+    - pattern: this.handleContributionsUpdate = function(...) { ... }
+  - pattern-either:
+    - pattern: eval(...)
+    - pattern: $OBJ.eval(...)
+  message: 'Insecure Deserialization via `req.body.preTax`
+
+    Vulnerable Sink: Passes untrusted data directly to `eval`.'
+  severity: ERROR
+  languages:
+  - javascript
+  - typescript
+  metadata:
+    category: security
+    technology:
+    - javascript
+    - typescript
+    source: fixora-ai-analysis
+    vulnerability_type: Insecure Deserialization
+    confidence: HIGH
+    wrapper_defined_in: app/routes/contributions.js
+    wraps:
+    - eval
+    modules_used:
+    - builtins
+    vulnerable_parameter: req.body.preTax
+    malicious_payload: 1+1
+    exploit_explanation: The attacker-controlled preTax is passed to eval(), allowing
+      arbitrary code execution.
+    exploit_injected_example: this.handleContributionsUpdate(req.body.preTax = 1+1)
+    impact_summary: Attackers can execute arbitrary JavaScript code, potentially leading
+      to data tampering or unauthorized access.
+- id: fixora-wrapper-this-displayresearch
+  patterns:
+  - pattern-either:
+    - pattern: this.displayResearch = (...) => { ... }
+    - pattern: this.displayResearch = function(...) { ... }
+  - pattern-either:
+    - pattern: needle.get(...)
+    - pattern: $OBJ.get(...)
+    - pattern: get(...)
+  message: 'SSRF via `req.query.url`
+
+    Vulnerable Sink: Passes untrusted data directly to `needle.get`.'
+  severity: ERROR
+  languages:
+  - javascript
+  - typescript
+  metadata:
+    category: security
+    technology:
+    - javascript
+    - typescript
+    source: fixora-ai-analysis
+    vulnerability_type: SSRF
+    confidence: HIGH
+    wrapper_defined_in: app/routes/research.js
+    wraps:
+    - needle.get
+    modules_used:
+    - needle
+    vulnerable_parameter: req.query.url
+    malicious_payload: http://example.com/malicious
+    exploit_explanation: The attacker-controlled URL is used to make a request, potentially
+      allowing SSRF attacks.
+    exploit_injected_example: this.displayResearch(req.query.url = http://example.com/malicious)
+    impact_summary: Attackers can make unauthorized requests to internal or external
+      services, potentially leading to data exposure or unauthorized access.
+    cwe:
+    - CWE-918
+    owasp:
+    - A10:2021
+- id: fixora-wrapper-callback-needle-get
+  patterns:
+  - pattern-either:
+    - pattern: <callback:needle.get> = (...) => { ... }
+    - pattern: <callback:needle.get> = function(...) { ... }
+  - pattern-either:
+    - pattern: res.write(...)
+    - pattern: $OBJ.write(...)
+    - pattern: write(...)
+  message: 'XSS via `body`
+
+    Vulnerable Sink: Passes untrusted data directly to `res.write`.'
+  severity: ERROR
+  languages:
+  - javascript
+  - typescript
+  metadata:
+    category: security
+    technology:
+    - javascript
+    - typescript
+    source: fixora-ai-analysis
+    vulnerability_type: XSS
+    confidence: HIGH
+    wrapper_defined_in: app/routes/research.js
+    wraps:
+    - res.write
+    modules_used:
+    - <object>.write
+    vulnerable_parameter: body
+    malicious_payload: <script>alert('XSS')</script>
+    exploit_explanation: The attacker-controlled body is written to the response,
+      potentially allowing XSS attacks.
+    exploit_injected_example: <callback:needle.get>(body = <script>alert('XSS')</script>)
+    impact_summary: Attackers can inject malicious JavaScript code, potentially leading
+      to data tampering or unauthorized access.
+    cwe:
+    - CWE-79
+    owasp:
+    - A03:2021
